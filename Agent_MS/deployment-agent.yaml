@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-service
+spec:
+  replicas: 2  # Adjust based on your needs
+  selector:
+    matchLabels:
+      app: agent-service
+  template:
+    metadata:
+      labels:
+        app: agent-service
+    spec:
+      containers:
+        - name: agent-service
+          image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/agent-service:latest  # ECR image URL
+          ports:
+            - containerPort: 5000  # Replace with the port your service is listening on

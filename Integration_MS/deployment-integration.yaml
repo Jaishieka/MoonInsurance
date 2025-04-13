@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: integration-service
+spec:
+  replicas: 2  # Adjust based on your needs
+  selector:
+    matchLabels:
+      app: integration-service
+  template:
+    metadata:
+      labels:
+        app: integration-service
+    spec:
+      containers:
+        - name: integration-service
+          image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/integration-service:latest  # ECR image URL
+          ports:
+            - containerPort: 5001  # Replace with the port your service is listening on
