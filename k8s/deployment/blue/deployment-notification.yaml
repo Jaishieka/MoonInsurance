@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  labels:
+    environment: blue
+spec:
+  replicas: 2  # Adjust based on your needs
+  selector:
+    matchLabels:
+      app: notification-service
+      environment: blue
+  template:
+    metadata:
+      labels:
+        app: notification-service
+        environment: blue
+    spec:
+      containers:
+        - name: notification-service
+          image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/notification-service:latest  # ECR image URL
+          ports:
+            - containerPort: 5002  # Replace with the port your service is listening on

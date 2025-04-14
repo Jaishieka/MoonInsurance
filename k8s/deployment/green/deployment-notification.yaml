@@ -2,15 +2,19 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: notification-service
+  labels:
+    environment: green
 spec:
   replicas: 2  # Adjust based on your needs
   selector:
     matchLabels:
       app: notification-service
+      environment: green
   template:
     metadata:
       labels:
         app: notification-service
+        environment: green
     spec:
       containers:
         - name: notification-service

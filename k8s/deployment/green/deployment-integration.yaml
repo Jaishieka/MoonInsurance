@@ -2,15 +2,19 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: integration-service
+  labels:
+    environment: green
 spec:
   replicas: 2  # Adjust based on your needs
   selector:
     matchLabels:
       app: integration-service
+      environment: green
   template:
     metadata:
       labels:
         app: integration-service
+        environment: green
     spec:
       containers:
         - name: integration-service

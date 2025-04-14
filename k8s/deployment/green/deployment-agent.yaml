@@ -2,15 +2,19 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agent-service
+  labels:
+    environment: green  # Add a label to identify the Green environment
 spec:
   replicas: 2  # Adjust based on your needs
   selector:
     matchLabels:
       app: agent-service
+      environment: green  # Make sure the selector matches the environment label
   template:
     metadata:
       labels:
         app: agent-service
+        environment: green  # Add label for Green environment
     spec:
       containers:
         - name: agent-service

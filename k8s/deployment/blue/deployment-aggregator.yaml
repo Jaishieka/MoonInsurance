@@ -4,15 +4,19 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: aggregator-service
+  labels:
+    environment: blue
 spec:
   replicas: 2
   selector:
     matchLabels:
       app: aggregator-service
+      environment: blue
   template:
     metadata:
       labels:
         app: aggregator-service
+        environment: blue
     spec:
       containers:
         - name: aggregator-service

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-service
+  labels:
+    environment: blue
+spec:
+  selector:
+    app: agent-service
+    environment: blue
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer

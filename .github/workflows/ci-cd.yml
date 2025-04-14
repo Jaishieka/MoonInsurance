@@ -31,11 +31,11 @@ jobs:
 
       - name: Build, Tag, and Push Docker Images
         run: |
-          declare -A services=(
-            ["Agent_MS"]="agent-service"
-            ["Integration_MS"]="integration-service"
-            ["Notification_MS"]="notification-service"
-            ["Aggregator_MS"]="aggregator-service"
+          declare -A services=( 
+            ["Agent_MS"]="agent-service" 
+            ["Integration_MS"]="integration-service" 
+            ["Notification_MS"]="notification-service" 
+            ["Aggregator_MS"]="aggregator-service" 
           )
 
           for folder in "${!services[@]}"; do
@@ -56,27 +56,35 @@ jobs:
         run: |
           aws eks update-kubeconfig --region $AWS_REGION --name mooninsurance-cluster
 
-      - name: Deploy to EKS (Rolling Update)
+      # Step 1: Deploy to Blue Environment
+      - name: Deploy to Blue Environment
         run: |
-          kubectl apply -f k8s/service/
-          kubectl apply -f k8s/deployment/
+          kubectl apply -f k8s/deployment/blue/
+          kubectl apply -f k8s/service/blue/
 
+      # Step 2: Deploy to Green Environment
+      - name: Deploy to Green Environment
+        run: |
+          kubectl apply -f k8s/deployment/green/
+          kubectl apply -f k8s/service/green/
+
+      # Step 3: Run Integration Tests
       - name: Run Integration Tests
         run: |
-          echo " Running integration tests..."
+          echo "Running integration tests..."
 
           SERVICES=("agent-service" "integration-service" "notification-service" "aggregator-service")
           URLS=()
 
           for svc in "${SERVICES[@]}"; do
-            echo " Checking LoadBalancer for $svc..."
+            echo "Checking LoadBalancer for $svc..."
             url=""
             while [ -z "$url" ]; do
-              echo " Waiting for $svc LoadBalancer IP..."
+              echo "Waiting for $svc LoadBalancer IP..."
               sleep 10
               url=$(kubectl get svc "$svc" -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
             done
-            echo " $svc is available at $url"
+            echo "$svc is available at $url"
             URLS+=("$url")
           done
 
@@ -85,11 +93,27 @@ jobs:
           NOTIFICATION_SERVICE_URL=${URLS[2]}
           AGGREGATOR_SERVICE_URL=${URLS[3]}
 
-          echo " Testing /health endpoints..."
+          echo "Testing /health endpoints..."
 
           curl --fail "http://$AGENT_SERVICE_URL/health" || exit 1
           curl --fail "http://$INTEGRATION_SERVICE_URL/health" || exit 1
           curl --fail "http://$NOTIFICATION_SERVICE_URL/health" || exit 1
           curl --fail "http://$AGGREGATOR_SERVICE_URL/health" || exit 1
 
-            echo " All services are healthy."
+          echo "All services are healthy."
+
+      # Step 4: Switch Traffic to Green Environment (Blue-Green Switch)
+      - name: Switch Traffic to Green
+        run: |
+          kubectl apply -f k8s/service/green/agent-service.yaml
+          kubectl apply -f k8s/service/green/integration-service.yaml
+          kubectl apply -f k8s/service/green/notification-service.yaml
+          kubectl apply -f k8s/service/green/aggregator-service.yaml
+
+      # Step 5: Clean up Blue Environment (Optional)
+      - name: Clean Up Blue Environment (Optional)
+        run: |
+          kubectl delete deployment agent-service --selector=environment=blue
+          kubectl delete deployment integration-service --selector=environment=blue
+          kubectl delete deployment notification-service --selector=environment=blue
+          kubectl delete deployment aggregator-service --selector=environment=blue

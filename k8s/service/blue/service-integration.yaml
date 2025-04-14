@@ -2,9 +2,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: integration-service
+  labels:
+    environment: blue
 spec:
   selector:
     app: integration-service
+    environment: blue
   ports:
     - protocol: TCP
       port: 80
