@@ -65,41 +65,23 @@ jobs:
         run: |
           echo " Running integration tests..."
 
-          # Get the external IP or DNS for each service (using LoadBalancer type)
-          AGENT_SERVICE_URL=$(kubectl get svc service-agent -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          INTEGRATION_SERVICE_URL=$(kubectl get svc service-integration -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          NOTIFICATION_SERVICE_URL=$(kubectl get svc service-notification -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          AGGREGATOR_SERVICE_URL=$(kubectl get svc service-aggregator -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          AGENT_SERVICE_URL=$(kubectl get svc agent-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            INTEGRATION_SERVICE_URL=$(kubectl get svc integration-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            NOTIFICATION_SERVICE_URL=$(kubectl get svc notification-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            AGGREGATOR_SERVICE_URL=$(kubectl get svc aggregator-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 
-          # If the LoadBalancer DNS or IP is not ready, retry after a short delay
-          if [ -z "$AGENT_SERVICE_URL" ]; then
-            echo "Waiting for service-agent LoadBalancer IP..."
-            sleep 30
-            AGENT_SERVICE_URL=$(kubectl get svc service-agent -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          fi
+            for url in "$AGENT_SERVICE_URL" "$INTEGRATION_SERVICE_URL" "$NOTIFICATION_SERVICE_URL" "$AGGREGATOR_SERVICE_URL"; do
+            while [ -z "$url" ]; do
+                echo "Waiting for LoadBalancer IP..."
+                sleep 10
+                url=$(kubectl get svc agent-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            done
+            done
 
-          if [ -z "$INTEGRATION_SERVICE_URL" ]; then
-            echo "Waiting for service-integration LoadBalancer IP..."
-            sleep 30
-            INTEGRATION_SERVICE_URL=$(kubectl get svc service-integration -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          fi
+            echo " Testing service health endpoints..."
+            curl --fail "http://$AGENT_SERVICE_URL/health" || exit 1
+            curl --fail "http://$INTEGRATION_SERVICE_URL/health" || exit 1
+            curl --fail "http://$NOTIFICATION_SERVICE_URL/health" || exit 1
+            curl --fail "http://$AGGREGATOR_SERVICE_URL/health" || exit 1
 
-          if [ -z "$NOTIFICATION_SERVICE_URL" ]; then
-            echo "Waiting for service-notification LoadBalancer IP..."
-            sleep 30
-            NOTIFICATION_SERVICE_URL=$(kubectl get svc service-notification -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          fi
-
-          if [ -z "$AGGREGATOR_SERVICE_URL" ]; then
-            echo "Waiting for service-aggregator LoadBalancer IP..."
-            sleep 30
-            AGGREGATOR_SERVICE_URL=$(kubectl get svc service-aggregator -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          fi
-
-          # Now test each service's health endpoint
-          curl --fail "http://$AGENT_SERVICE_URL/health" || exit 1
-          curl --fail "http://$INTEGRATION_SERVICE_URL/health" || exit 1
-          curl --fail "http://$NOTIFICATION_SERVICE_URL/health" || exit 1
-          curl --fail "http://$AGGREGATOR_SERVICE_URL/health" || exit 1
-
-          echo " All services are healthy."
+            echo " All services are healthy."
