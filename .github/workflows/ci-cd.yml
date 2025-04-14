@@ -54,7 +54,7 @@ jobs:
 
       - name: Update Kubeconfig
         run: |
-          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ secrets.mooninsurance-cluster }}
+          aws eks update-kubeconfig --region $AWS_REGION --name mooninsurance-cluster
 
       - name: Deploy to EKS (Rolling Update)
         run: |
