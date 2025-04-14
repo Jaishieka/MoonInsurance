@@ -1,0 +1,105 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours for reliability checks
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ap-south-1
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
+      - name: Build, Tag, and Push Docker Images
+        run: |
+          declare -A services=(
+            ["Agent_MS"]="agent-service"
+            ["Integration_MS"]="integration-service"
+            ["Notification_MS"]="notification-service"
+            ["Aggregator_MS"]="aggregator-service"
+          )
+
+          for folder in "${!services[@]}"; do
+            image_name=${services[$folder]}
+            echo "🔧 Building image: $image_name from folder: $folder"
+
+            docker build -t $image_name ./$folder
+            docker tag $image_name:latest ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$image_name:latest
+            docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$image_name:latest
+          done
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ secrets.mooninsurance-cluster }}
+
+      - name: Deploy to EKS (Rolling Update)
+        run: |
+          kubectl apply -f k8s/service/
+          kubectl apply -f k8s/deployment/
+
+      - name: Run Integration Tests
+        run: |
+          echo " Running integration tests..."
+
+          # Get the external IP or DNS for each service (using LoadBalancer type)
+          AGENT_SERVICE_URL=$(kubectl get svc service-agent -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          INTEGRATION_SERVICE_URL=$(kubectl get svc service-integration -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          NOTIFICATION_SERVICE_URL=$(kubectl get svc service-notification -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          AGGREGATOR_SERVICE_URL=$(kubectl get svc service-aggregator -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+
+          # If the LoadBalancer DNS or IP is not ready, retry after a short delay
+          if [ -z "$AGENT_SERVICE_URL" ]; then
+            echo "Waiting for service-agent LoadBalancer IP..."
+            sleep 30
+            AGENT_SERVICE_URL=$(kubectl get svc service-agent -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          fi
+
+          if [ -z "$INTEGRATION_SERVICE_URL" ]; then
+            echo "Waiting for service-integration LoadBalancer IP..."
+            sleep 30
+            INTEGRATION_SERVICE_URL=$(kubectl get svc service-integration -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          fi
+
+          if [ -z "$NOTIFICATION_SERVICE_URL" ]; then
+            echo "Waiting for service-notification LoadBalancer IP..."
+            sleep 30
+            NOTIFICATION_SERVICE_URL=$(kubectl get svc service-notification -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          fi
+
+          if [ -z "$AGGREGATOR_SERVICE_URL" ]; then
+            echo "Waiting for service-aggregator LoadBalancer IP..."
+            sleep 30
+            AGGREGATOR_SERVICE_URL=$(kubectl get svc service-aggregator -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          fi
+
+          # Now test each service's health endpoint
+          curl --fail "http://$AGENT_SERVICE_URL/health" || exit 1
+          curl --fail "http://$INTEGRATION_SERVICE_URL/health" || exit 1
+          curl --fail "http://$NOTIFICATION_SERVICE_URL/health" || exit 1
+          curl --fail "http://$AGGREGATOR_SERVICE_URL/health" || exit 1
+
+          echo " All services are healthy."
