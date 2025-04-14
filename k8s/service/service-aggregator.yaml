@@ -6,7 +6,7 @@ metadata:
   name: aggregator-service
 spec:
   selector:
-    app: aggregator
+    app: aggregator-service
   ports:
     - protocol: TCP
       port: 80

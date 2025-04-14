@@ -4,7 +4,7 @@ metadata:
   name: agent-service
 spec:
   selector:
-    app: agent
+    app: agent-service
   ports:
     - protocol: TCP
       port: 80

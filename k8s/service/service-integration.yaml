@@ -4,7 +4,7 @@ metadata:
   name: integration-service
 spec:
   selector:
-    app: integration
+    app: integration-service
   ports:
     - protocol: TCP
       port: 80
