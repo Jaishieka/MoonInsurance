@@ -1,19 +1,22 @@
-# aggregator-service/app.py
 from flask import Flask, jsonify
 import requests
 
 app = Flask(__name__)
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "healthy"}), 200
+
 @app.route('/aggregate')
 def aggregate_data():
     try:
-        agent_data = requests.get("http://agent-service/agent").json()
-        integration_data = requests.get("http://integration-service/integration").json()
-        notification_data = requests.get("http://notification-service/notifications").json()
+        agent_data = requests.get("http://agent-service/agents", timeout=5).json()
+        integration_data = requests.get("http://integration-service/sales", timeout=5).json()
+        notification_data = requests.get("http://notification-service/notifications", timeout=5).json()
 
         combined = {
-            "agent": agent_data,
-            "integration": integration_data,
+            "agents": agent_data,
+            "sales": integration_data,
             "notifications": notification_data
         }
         return jsonify(combined)

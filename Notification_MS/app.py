@@ -4,6 +4,12 @@ app = Flask(__name__)
 
 notifications = []
 
+# Health check route
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "healthy"}), 200
+
+# Route to send notification
 @app.route('/notify', methods=['POST'])
 def send_notification():
     data = request.json
@@ -13,6 +19,7 @@ def send_notification():
     print(message)  # Simulate sending email/SMS
     return jsonify({"message": "Notification sent"}), 200
 
+# Route to get all notifications
 @app.route('/notifications', methods=['GET'])
 def get_notifications():
     return jsonify(notifications)
