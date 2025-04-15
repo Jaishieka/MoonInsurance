@@ -9,7 +9,8 @@ spec:
     app: notification-service
     environment: green
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 5002
   type: LoadBalancer

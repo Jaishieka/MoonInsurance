@@ -11,7 +11,8 @@ spec:
     app: aggregator-service
     environment: green
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 5000
   type: LoadBalancer
