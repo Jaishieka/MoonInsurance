@@ -8,12 +8,17 @@ agents = {}  # Simulated in-memory database
 def health():
     return jsonify({"status": "healthy"}), 200  # Health check route
 
+@app.route('/agents', methods=['GET'])
+def get_agents():
+    return jsonify(agents)
+
 @app.route('/agents', methods=['POST'])
 def add_agent():
     data = request.json
     agent_code = data.get("agent_code")
     agents[agent_code] = data
     return jsonify({"message": "Agent added"}), 201
+
 
 @app.route('/agents/<agent_code>', methods=['GET'])
 def get_agent(agent_code):

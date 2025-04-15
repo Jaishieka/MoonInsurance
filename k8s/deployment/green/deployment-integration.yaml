@@ -18,6 +18,8 @@ spec:
     spec:
       containers:
         - name: integration-service
-          image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/integration-service:latest  # ECR image URL
+          image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/integration-ms:latest  # ECR image URL
           ports:
             - containerPort: 5001  # Replace with the port your service is listening on
+      imagePullSecrets:
+        - name: ecr-registry

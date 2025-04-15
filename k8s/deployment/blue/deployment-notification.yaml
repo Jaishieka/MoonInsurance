@@ -18,6 +18,8 @@ spec:
     spec:
       containers:
         - name: notification-service
-          image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/notification-service:latest  # ECR image URL
+          image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/notification-ms:latest  # ECR image URL
           ports:
             - containerPort: 5002  # Replace with the port your service is listening on
+      imagePullSecrets:
+        - name: ecr-registry

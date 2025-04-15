@@ -7,7 +7,7 @@ app = Flask(__name__)
 def health():
     return jsonify({"status": "healthy"}), 200
 
-@app.route('/aggregate')
+@app.route('/aggregator-endpoint')  # Change this line to match the curl request
 def aggregate_data():
     try:
         agent_data = requests.get("http://agent-service/agents", timeout=5).json()

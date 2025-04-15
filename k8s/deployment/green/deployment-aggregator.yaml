@@ -20,6 +20,8 @@ spec:
     spec:
       containers:
         - name: aggregator-service
-          image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/aggregator-service:latest
+          image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/aggregator-ms:latest
           ports:
             - containerPort: 5000
+      imagePullSecrets:
+        - name: ecr-registry

@@ -18,6 +18,8 @@ spec:
     spec:
       containers:
         - name: agent-service
-          image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/agent-service:latest  # ECR image URL
+          image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/agent-ms:latest  # ECR image URL
           ports:
             - containerPort: 5000  # Replace with the port your service is listening on
+      imagePullSecrets:
+        - name: ecr-registry
