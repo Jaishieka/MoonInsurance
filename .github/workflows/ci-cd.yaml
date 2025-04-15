@@ -118,7 +118,5 @@ jobs:
       # Step 5: Clean up Blue Environment (Optional)
       - name: Clean Up Blue Environment (Optional)
         run: |
-          kubectl delete deployment agent-service --selector=environment=blue
-          kubectl delete deployment integration-service --selector=environment=blue
-          kubectl delete deployment notification-service --selector=environment=blue
-          kubectl delete deployment aggregator-service --selector=environment=blue
+          echo "🧹 Cleaning up blue environment..."
+          kubectl delete deployment --selector=environment=blue
