@@ -102,10 +102,10 @@ jobs:
       # Step 4: Switch Traffic to Green Environment (Blue-Green Switch)
       - name: Switch Traffic to Green
         run: |
-          kubectl apply -f k8s/service/green/agent-service.yaml
-          kubectl apply -f k8s/service/green/integration-service.yaml
-          kubectl apply -f k8s/service/green/notification-service.yaml
-          kubectl apply -f k8s/service/green/aggregator-service.yaml
+          kubectl apply -f k8s/service/green/service-agent.yaml
+          kubectl apply -f k8s/service/green/service-integration.yaml
+          kubectl apply -f k8s/service/green/service-notification.yaml
+          kubectl apply -f k8s/service/green/service-aggregator.yaml
 
       # Step 5: Clean up Blue Environment (Optional)
       - name: Clean Up Blue Environment (Optional)
