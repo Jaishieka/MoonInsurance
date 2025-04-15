@@ -29,10 +29,10 @@ jobs:
       - name: Build, Tag, and Push Docker Images
         run: |
           declare -A services=( 
-            ["Agent_MS"]="agent-service" 
-            ["Integration_MS"]="integration-service" 
-            ["Notification_MS"]="notification-service" 
-            ["Aggregator_MS"]="aggregator-service" 
+            ["Agent_MS"]="agent-ms" 
+            ["Integration_MS"]="integration-ms" 
+            ["Notification_MS"]="notification-ms" 
+            ["Aggregator_MS"]="aggregator-ms" 
           )
 
           for folder in "${!services[@]}"; do
