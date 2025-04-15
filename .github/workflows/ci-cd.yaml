@@ -62,6 +62,13 @@ jobs:
       # Step 2: Deploy to Green Environment
       - name: Deploy to Green Environment
         run: |
+          # Delete existing green deployments before applying new ones
+          kubectl delete deployment agent-service-green || true
+          kubectl delete deployment integration-service-green || true
+          kubectl delete deployment notification-service-green || true
+          kubectl delete deployment aggregator-service-green || true
+
+
           kubectl apply -f k8s/deployment/green/
           kubectl apply -f k8s/service/green/
 
