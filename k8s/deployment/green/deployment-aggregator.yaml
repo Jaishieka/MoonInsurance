@@ -3,7 +3,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: integration-service-green
+  name: aggregator-service-green
   labels:
     environment: green
 spec:
