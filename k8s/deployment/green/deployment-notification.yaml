@@ -21,5 +21,20 @@ spec:
           image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/notification-ms:latest  # ECR image URL
           ports:
             - containerPort: 5002  # Replace with the port your service is listening on
+          env:
+            - name: DB_HOST
+              value: "mooninsurance-db.czwuqysi8tph.ap-south-1.rds.amazonaws.com"  # Replace with your RDS endpoint
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret  # Reference to the secret you created
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret  # Reference to the secret for password
+                  key: password
+            - name: DB_NAME
+              value: "mooninsurance-db"  # Your DB name
       imagePullSecrets:
         - name: ecr-registry

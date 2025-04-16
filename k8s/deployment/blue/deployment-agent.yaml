@@ -3,23 +3,38 @@ kind: Deployment
 metadata:
   name: agent-service
   labels:
-    environment: blue  # Add a label to identify the Blue environment
+    environment: blue  # Identifying the Blue environment
 spec:
   replicas: 2  # Adjust based on your needs
   selector:
     matchLabels:
       app: agent-service
-      environment: blue  # Make sure the selector matches the environment label
+      environment: blue  # Ensure the selector matches the environment label
   template:
     metadata:
       labels:
         app: agent-service
-        environment: blue  # Add label for Blue environment
+        environment: blue  # Blue environment label
     spec:
       containers:
         - name: agent-service
           image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/agent-ms:latest  # ECR image URL
           ports:
-            - containerPort: 5000  # Replace with the port your service is listening on
+            - containerPort: 5000  # Replace with your service's listening port
+          env:
+            - name: DB_HOST
+              value: "mooninsurance-db.czwuqysi8tph.ap-south-1.rds.amazonaws.com"  # Replace with your RDS endpoint
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret  # Reference to the secret you created
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret  # Reference to the secret for password
+                  key: password
+            - name: DB_NAME
+              value: "mooninsurance-db"  # Your DB name
       imagePullSecrets:
-        - name: ecr-registry
+        - name: ecr-registry  # Ensure this matches your ECR pull secret name

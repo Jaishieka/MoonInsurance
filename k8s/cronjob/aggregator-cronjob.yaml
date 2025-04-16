@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: aggregator-cronjob
+  namespace: default
+spec:
+  schedule: "0 * * * *"  # Runs every hour. You can change this.
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: aggregator
+            image: 287809004610.dkr.ecr.ap-south-1.amazonaws.com/aggregator-ms:latest
+            imagePullPolicy: Always
+            resources:
+              limits:
+                memory: "256Mi"
+                cpu: "500m"
+          restartPolicy: OnFailure

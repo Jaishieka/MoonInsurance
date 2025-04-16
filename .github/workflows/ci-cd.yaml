@@ -62,23 +62,27 @@ jobs:
       # Step 2: Deploy to Green Environment
       - name: Deploy to Green Environment
         run: |
-          echo "🔄 Deleting existing green deployments..."
+          echo " Deleting existing green deployments..."
 
-          deployments=("agent-service-green" "integration-service-green" "notification-service-green" "aggregator-service-green")
+          deployments=("agent-service-green" "integration-service-green" "notification-service-green")
           for dep in "${deployments[@]}"; do
             kubectl delete deployment "$dep" --ignore-not-found --wait
           done
 
-
           kubectl apply -f k8s/deployment/green/
           kubectl apply -f k8s/service/green/
 
-      # Step 3: Run Integration Tests
+      #  Step 3: Deploy Aggregator CronJob
+      - name: Deploy Aggregator CronJob
+        run: |
+          kubectl apply -f k8s/cronjob/aggregator-cronjob.yaml
+
+      # Step 4: Run Integration Tests
       - name: Run Integration Tests
         run: |
           echo "Running integration tests..."
 
-          SERVICES=("agent-service" "integration-service" "notification-service" "aggregator-service")
+          SERVICES=("agent-service" "integration-service" "notification-service")
           URLS=()
 
           for svc in "${SERVICES[@]}"; do
@@ -96,27 +100,24 @@ jobs:
           AGENT_SERVICE_URL=${URLS[0]}
           INTEGRATION_SERVICE_URL=${URLS[1]}
           NOTIFICATION_SERVICE_URL=${URLS[2]}
-          AGGREGATOR_SERVICE_URL=${URLS[3]}
 
           echo "Testing /health endpoints..."
 
           curl --fail "http://$AGENT_SERVICE_URL/health" || exit 1
           curl --fail "http://$INTEGRATION_SERVICE_URL/health" || exit 1
           curl --fail "http://$NOTIFICATION_SERVICE_URL/health" || exit 1
-          curl --fail "http://$AGGREGATOR_SERVICE_URL/health" || exit 1
 
           echo "All services are healthy."
 
-      # Step 4: Switch Traffic to Green Environment (Blue-Green Switch)
+      # Step 5: Switch Traffic to Green
       - name: Switch Traffic to Green
         run: |
           kubectl apply -f k8s/service/green/service-agent.yaml
           kubectl apply -f k8s/service/green/service-integration.yaml
           kubectl apply -f k8s/service/green/service-notification.yaml
-          kubectl apply -f k8s/service/green/service-aggregator.yaml
 
-      # Step 5: Clean up Blue Environment (Optional)
+      # Step 6: Clean up Blue Environment (Optional)
       - name: Clean Up Blue Environment (Optional)
         run: |
-          echo "🧹 Cleaning up blue environment..."
+          echo " Cleaning up blue environment..."
           kubectl delete deployment --selector=environment=blue
