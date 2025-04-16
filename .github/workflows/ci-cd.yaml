@@ -101,11 +101,25 @@ jobs:
           INTEGRATION_SERVICE_URL=${URLS[1]}
           NOTIFICATION_SERVICE_URL=${URLS[2]}
 
-          echo "Testing /health endpoints..."
+          echo "Testing /health endpoints with retries..."
 
-          curl --fail "http://$AGENT_SERVICE_URL/health" || exit 1
-          curl --fail "http://$INTEGRATION_SERVICE_URL/health" || exit 1
-          curl --fail "http://$NOTIFICATION_SERVICE_URL/health" || exit 1
+          for i in {1..10}; do
+            echo "Attempt $i: Checking Agent Service..."
+            curl --fail "http://$AGENT_SERVICE_URL/health" && break || sleep 5
+            if [ "$i" -eq 10 ]; then echo "Agent Service health check failed"; exit 1; fi
+          done
+
+          for i in {1..10}; do
+            echo "Attempt $i: Checking Integration Service..."
+            curl --fail "http://$INTEGRATION_SERVICE_URL/health" && break || sleep 5
+            if [ "$i" -eq 10 ]; then echo "Integration Service health check failed"; exit 1; fi
+          done
+
+          for i in {1..10}; do
+            echo "Attempt $i: Checking Notification Service..."
+            curl --fail "http://$NOTIFICATION_SERVICE_URL/health" && break || sleep 5
+            if [ "$i" -eq 10 ]; then echo "Notification Service health check failed"; exit 1; fi
+          done
 
           echo "All services are healthy."
 
