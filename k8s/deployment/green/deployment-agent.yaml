@@ -35,6 +35,6 @@ spec:
                   name: db-secret  # Reference to the secret for password
                   key: password
             - name: DB_NAME
-              value: "mooninsurance-db"  # Your DB name      
+              value: "mooninsurance"  # Your DB name      
       imagePullSecrets:
         - name: ecr-registry

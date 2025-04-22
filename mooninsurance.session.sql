@@ -1,0 +1,5 @@
+SHOW DATABASES;
+
+SHOW TABLES;
+
+SELECT * FROM agents;

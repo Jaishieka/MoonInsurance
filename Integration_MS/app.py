@@ -31,8 +31,9 @@ def create_sales_table():
                 policy_id VARCHAR(50),
                 customer_name VARCHAR(100),
                 amount DECIMAL(10,2),
-                sale_date DATE DEFAULT CURRENT_DATE,
+                sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 agent_code VARCHAR(50),
+                INDEX(agent_code),
                 FOREIGN KEY (agent_code) REFERENCES agents(agent_code)  -- Foreign key to agents
             )
         """)
